@@ -1,0 +1,21 @@
+syntax = "proto3";
+
+package gopay.fraude;
+
+service FraudCheck {
+  rpc Evaluer (TransfertRequest) returns (Verdict);
+  rpc Surveiller (stream TransfertRequest) returns (stream Verdict);
+}
+
+message TransfertRequest {
+  int64 wallet_id = 1;
+  int64 montant = 2;          // en FCFA
+  string beneficiaire_tel = 3;
+  string region = 4;
+}
+
+message Verdict {
+  double score = 1;           // de 0 (sûr) à 1 (fraude probable)
+  bool bloquer = 2;
+  string raison = 3;
+}

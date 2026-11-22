@@ -3,15 +3,17 @@
 import secrets
 from datetime import date
 from decimal import ROUND_HALF_UP, Decimal
-
+from typing import Protocol
 from gopay.change import ClientChange
 from gopay.errors import (
     CodeDejaUtilise,
     OperationInterdite,
     RessourceIntrouvable,
+    ServiceIndisponible, 
     SoldeInsuffisant,
     TelephoneDejaUtilise,
 )
+from gopay.fraude.client import Verdict
 from gopay.models import Transaction, Transfert, Wallet
 from gopay.repository import MemoireRepository
 
@@ -20,6 +22,13 @@ FRAIS_MINIMUM = Decimal("50")  # R2 : 50 FCFA minimum
 MONTANT_MINIMUM = Decimal("100")  # R1
 UN_FRANC = Decimal("1")
 ARRONDI = ROUND_HALF_UP  # R8 : au franc le plus proche, une moitié vers le haut
+SEUIL_SANS_ANTIFRAUDE = Decimal("50000")  # R13
+
+
+class AntiFraude(Protocol):
+    """Tout objet qui sait évaluer un transfert : le vrai client gRPC, ou un faux en test."""
+
+    def evaluer(self, wallet_id: int, montant: int, beneficiaire_tel: str, region: str) -> Verdict: ...
 
 
 def arrondir_au_franc(montant: Decimal) -> Decimal:
@@ -33,8 +42,9 @@ def calculer_frais(montant: Decimal) -> Decimal:
 
 
 class GoPayService:
-    def __init__(self, repo: MemoireRepository) -> None:
+    def __init__(self, repo: MemoireRepository, antifraude: AntiFraude | None = None) -> None:
         self.repo = repo
+        self.antifraude = antifraude
 
     # ----- Wallets -----
     def ouvrir_wallet(self, nom: str, telephone: str, type_: str, region: str = "Dakar") -> Wallet:
@@ -59,6 +69,7 @@ class GoPayService:
     def transferer(self, expediteur: Wallet, beneficiaire_tel: str, montant: Decimal) -> Transfert:
         frais = calculer_frais(montant)  # R2
         total = montant + frais  # R3
+        self._controler_fraude(expediteur, beneficiaire_tel, montant)  # R12, R13 : avant tout débit
         with self.repo.verrous(expediteur.id):  # R10 : un seul transfert à la fois par wallet
             solde = self.repo.lire_solde(expediteur)
             if solde < total:  # R4
@@ -72,6 +83,19 @@ class GoPayService:
                 expediteur, "transfert", montant, frais, reference=f"transfert:{transfert.id}"
             )
             return transfert
+    def _controler_fraude(self, expediteur: Wallet, beneficiaire_tel: str, montant: Decimal) -> None:
+        if self.antifraude is None:
+            return
+        try:
+            verdict = self.antifraude.evaluer(expediteur.id, int(montant), beneficiaire_tel, expediteur.region)
+        except ServiceIndisponible:
+            if montant >= SEUIL_SANS_ANTIFRAUDE:  # R13 : trop risqué sans avis
+                raise
+            return  # R13 : petit montant, on laisse passer
+        if verdict.bloquer:  # R12
+            raise OperationInterdite(
+                f"Transfert bloqué par l'anti-fraude (score {verdict.score:.2f} : {verdict.raison})."
+            )
 
     def _nouveau_code(self) -> str:
         """R5 : un code à 6 chiffres, tiré au hasard de façon sûre, jamais en double."""
