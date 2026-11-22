@@ -1,6 +1,7 @@
+from typing import ClassVar as _ClassVar
+
 from google.protobuf import descriptor as _descriptor
 from google.protobuf import message as _message
-from typing import ClassVar as _ClassVar, Optional as _Optional
 
 DESCRIPTOR: _descriptor.FileDescriptor
 
@@ -14,7 +15,13 @@ class TransfertRequest(_message.Message):
     montant: int
     beneficiaire_tel: str
     region: str
-    def __init__(self, wallet_id: _Optional[int] = ..., montant: _Optional[int] = ..., beneficiaire_tel: _Optional[str] = ..., region: _Optional[str] = ...) -> None: ...
+    def __init__(
+        self,
+        wallet_id: int | None = ...,
+        montant: int | None = ...,
+        beneficiaire_tel: str | None = ...,
+        region: str | None = ...,
+    ) -> None: ...
 
 class Verdict(_message.Message):
     __slots__ = ("score", "bloquer", "raison")
@@ -24,4 +31,4 @@ class Verdict(_message.Message):
     score: float
     bloquer: bool
     raison: str
-    def __init__(self, score: _Optional[float] = ..., bloquer: _Optional[bool] = ..., raison: _Optional[str] = ...) -> None: ...
+    def __init__(self, score: float | None = ..., bloquer: bool | None = ..., raison: str | None = ...) -> None: ...

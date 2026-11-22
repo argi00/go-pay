@@ -6,16 +6,19 @@ from typing import Annotated
 from fastapi import Depends, Header
 
 from gopay.change import ClientChange
-from gopay.fraude.client import ClientFraude 
+from gopay.fraude.client import ClientFraude
 from gopay.idempotence import StockIdempotence
 from gopay.models import Wallet
 from gopay.repository import MemoireRepository
 from gopay.services import AntiFraude, GoPayService
+from gopay.webhooks import EnvoyeurWebhooks
 
 _repo = MemoireRepository(latence=0.005)  # 5 ms, comme une vraie base de données
 _idempotence = StockIdempotence()
 _change = ClientChange(os.environ.get("GOPAY_CHANGE_URL", "http://127.0.0.1:8001"))
 _antifraude = ClientFraude(os.environ.get("GOPAY_FRAUDE_ADRESSE", "localhost:50051"))
+_envoyeur = EnvoyeurWebhooks()
+
 
 def get_repository() -> MemoireRepository:
     return _repo
@@ -40,9 +43,14 @@ def get_change() -> ClientChange:
     return _change
 
 
+def get_envoyeur() -> EnvoyeurWebhooks:
+    return _envoyeur
+
+
 Service = Annotated[GoPayService, Depends(get_service)]
 Idempotence = Annotated[StockIdempotence, Depends(get_idempotence)]
 Change = Annotated[ClientChange, Depends(get_change)]
+Envoyeur = Annotated[EnvoyeurWebhooks, Depends(get_envoyeur)]
 CleIdempotence = Annotated[str, Header(alias="Idempotency-Key", min_length=8, max_length=100)]
 
 

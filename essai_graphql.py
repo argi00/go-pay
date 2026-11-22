@@ -5,6 +5,7 @@ Lancement : uv run python essai_graphql.py
 
 import asyncio
 from decimal import Decimal
+
 from gopay.graphql_api import Contexte, schema
 from gopay.repository import MemoireRepository
 from gopay.services import GoPayService

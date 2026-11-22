@@ -15,6 +15,7 @@ class MemoireRepository:
         self.wallets: dict[int, Wallet] = {}
         self.transferts: dict[int, Transfert] = {}
         self.transactions: dict[int, Transaction] = {}
+        self.webhooks: dict[int, tuple[str, str]] = {}  # marchand_id → (url, secret)
         self._compteurs = {"wallet": 0, "transfert": 0, "transaction": 0}
         self._latence = latence  # simule le temps de réponse d'une vraie base de données
         self._verrous: dict[int, threading.Lock] = {}

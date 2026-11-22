@@ -4,7 +4,7 @@ from datetime import datetime
 from decimal import Decimal
 from typing import Annotated, Literal
 
-from pydantic import BaseModel, ConfigDict, Field, computed_field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, HttpUrl, computed_field, field_validator
 
 # Types réutilisables
 Telephone = Annotated[str, Field(pattern=r"^\+2217[05678]\d{7}$", examples=["+221770000000"])]
@@ -17,6 +17,17 @@ def nettoyer_telephone(valeur: object) -> object:
     if isinstance(valeur, str):
         return valeur.replace(" ", "")
     return valeur
+
+
+# ---------- Webhooks des marchands ----------
+class WebhookIn(BaseModel):
+    url: HttpUrl
+
+
+class WebhookOut(BaseModel):
+    marchand_id: int
+    url: str
+    secret: str
 
 
 # ---------- Wallets ----------
@@ -39,7 +50,7 @@ class WalletOut(BaseModel):
     nom: str
     telephone: str
     type: str
-    region: str 
+    region: str
     solde: Decimal
     cree_le: datetime
 

@@ -4,12 +4,13 @@ import secrets
 from datetime import date
 from decimal import ROUND_HALF_UP, Decimal
 from typing import Protocol
+
 from gopay.change import ClientChange
 from gopay.errors import (
     CodeDejaUtilise,
     OperationInterdite,
     RessourceIntrouvable,
-    ServiceIndisponible, 
+    ServiceIndisponible,
     SoldeInsuffisant,
     TelephoneDejaUtilise,
 )
@@ -52,7 +53,6 @@ class GoPayService:
             raise TelephoneDejaUtilise(f"Le numéro {telephone} a déjà un wallet.")
         return self.repo.creer_wallet(nom, telephone, type_, region)
 
-
     def lire_wallet(self, wallet_id: int) -> Wallet:
         wallet = self.repo.wallet(wallet_id)
         if wallet is None:
@@ -83,6 +83,7 @@ class GoPayService:
                 expediteur, "transfert", montant, frais, reference=f"transfert:{transfert.id}"
             )
             return transfert
+
     def _controler_fraude(self, expediteur: Wallet, beneficiaire_tel: str, montant: Decimal) -> None:
         if self.antifraude is None:
             return
@@ -152,6 +153,16 @@ class GoPayService:
             return self.repo.ajouter_transaction(
                 client, "paiement_envoye", montant, Decimal("0"), reference=f"marchand:{marchand.id}"
             )
+
+    # ----- Webhooks des marchands (R15) -----
+    def configurer_webhook(self, marchand_id: int, url: str) -> str:
+        """Enregistre l'adresse du marchand et lui remet un secret, affiché une seule fois."""
+        marchand = self.lire_wallet(marchand_id)
+        if marchand.type != "marchand":
+            raise OperationInterdite("Seul un wallet marchand peut recevoir des webhooks.")
+        secret = secrets.token_hex(32)
+        self.repo.webhooks[marchand_id] = (url, secret)
+        return secret
 
     # ----- Historique -----
     def historique(

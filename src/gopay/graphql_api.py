@@ -4,10 +4,10 @@ from __future__ import annotations
 
 from decimal import Decimal
 from typing import Annotated
-from strawberry.dataloader import DataLoader
 
 import strawberry
 from fastapi import Depends
+from strawberry.dataloader import DataLoader
 from strawberry.fastapi import BaseContext, GraphQLRouter
 
 from gopay import models
@@ -30,7 +30,6 @@ class Contexte(BaseContext):
         """Appelée UNE fois par requête, avec tous les identifiants demandés."""
         self.lectures_wallets += 1
         return [Wallet.depuis(self.repo.wallets[i]) for i in ids]
-
 
 
 Info = strawberry.Info[Contexte, None]
@@ -69,7 +68,6 @@ class Transaction:
     @strawberry.field
     async def wallet(self, info: Info) -> Wallet:
         return await info.context.wallets.load(self.wallet_id)
-
 
 
 @strawberry.type
