@@ -24,6 +24,7 @@ class WalletIn(BaseModel):
     nom: str = Field(min_length=2, max_length=100)
     telephone: Telephone
     type: Literal["client", "marchand"] = "client"
+    region: str = Field(default="Dakar", min_length=2, max_length=50)
 
     @field_validator("telephone", mode="before")
     @classmethod
@@ -38,6 +39,7 @@ class WalletOut(BaseModel):
     nom: str
     telephone: str
     type: str
+    region: str 
     solde: Decimal
     cree_le: datetime
 

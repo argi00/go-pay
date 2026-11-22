@@ -43,8 +43,8 @@ class MemoireRepository:
         return solde
 
     # ----- Wallets -----
-    def creer_wallet(self, nom: str, telephone: str, type_: str) -> Wallet:
-        wallet = Wallet(id=self._prochain_id("wallet"), nom=nom, telephone=telephone, type=type_)
+    def creer_wallet(self, nom: str, telephone: str, type_: str, region: str = "Dakar") -> Wallet:
+        wallet = Wallet(id=self._prochain_id("wallet"), nom=nom, telephone=telephone, type=type_, region=region)
         self.wallets[wallet.id] = wallet
         return wallet
 

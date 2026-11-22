@@ -9,7 +9,10 @@ authors = [
 requires-python = ">=3.12"
 dependencies = [
     "fastapi[standard]>=0.165.0",
+    "grpcio>=1.85.3",
+    "grpcio-tools>=1.85.3",
     "httpx>=0.28.1",
+    "strawberry-graphql>=0.341.2",
     "tenacity>=9.2.1",
 ]
 
@@ -22,6 +25,7 @@ dev = [
     "mypy>=2.4.1",
     "pytest>=9.2.0",
     "ruff>=0.17.6",
+    "types-grpcio>=1.85.0.20261122",
 ]
 
 [tool.ruff]
@@ -33,3 +37,13 @@ select = ["E", "F", "I", "B", "UP"]
 [tool.mypy]
 strict = true
 plugins = ["pydantic.mypy"]
+
+
+[[tool.mypy.overrides]]
+
+ignore_errors = true
+module = ["gopay.fraude.serveur", "gopay.fraude.client"]
+disallow_untyped_calls = false  # le code généré par grpc_tools n'est pas annoté
+
+[tool.pytest.ini_options]
+pythonpath = ["."]

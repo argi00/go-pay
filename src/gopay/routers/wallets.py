@@ -13,7 +13,7 @@ router = APIRouter(prefix="/v1/wallets", tags=["Wallets"])
 
 @router.post("", status_code=201)
 def ouvrir_wallet(data: WalletIn, service: Service) -> WalletOut:
-    wallet = service.ouvrir_wallet(data.nom, data.telephone, data.type)
+    wallet = service.ouvrir_wallet(data.nom, data.telephone, data.type, data.region)
     return WalletOut.model_validate(wallet)
 
 

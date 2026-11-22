@@ -15,6 +15,7 @@ class Wallet:
     nom: str
     telephone: str
     type: str  # "client" ou "marchand"
+    region: str = "Dakar"
     solde: Decimal = Decimal("0")
     cree_le: datetime = field(default_factory=maintenant)
 
